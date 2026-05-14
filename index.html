@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大货样品功能说明文档</title>
+<style>
+    body { font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif; max-width: 900px; margin: 0 auto; padding: 40px 20px; line-height: 1.8; color: #333; background: #fafafa; }
+    h1 { color: #1a73e8; border-bottom: 3px solid #1a73e8; padding-bottom: 10px; font-size: 1.8em; }
+    h2 { color: #333; border-bottom: 1px solid #e0e0e0; padding-bottom: 8px; margin-top: 40px; font-size: 1.4em; }
+    h3 { color: #555; font-size: 1.1em; }
+    table { border-collapse: collapse; width: 100%; margin: 15px 0; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    th { background: #1a73e8; color: white; padding: 12px 8px; text-align: left; font-weight: 600; }
+    td { padding: 10px 8px; border-bottom: 1px solid #eee; vertical-align: top; }
+    tr:hover { background: #f5f8ff; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: "Consolas", monospace; font-size: 0.9em; }
+    pre { background: #2d2d2d; color: #f8f8f2; padding: 20px; border-radius: 6px; overflow-x: auto; }
+    pre code { background: none; padding: 0; color: inherit; }
+    strong { color: #d93025; }
+    hr { border: none; border-top: 1px solid #e0e0e0; margin: 30px 0; }
+    .tag { display: inline-block; background: #e8f0fe; color: #1a73e8; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; }
+    blockquote { border-left: 4px solid #1a73e8; margin: 15px 0; padding: 10px 20px; background: #f0f7ff; color: #555; }
+</style>
+</head>
+<body>
+<h1>大货样品管理页面 功能说明文档</h1><br>
+<br>
+> <strong>页面地址</strong>：<code>https://qc-ui.qa.aukeyit.com/#/newProductTest/biggoodsSample</code><br>
+> <strong>所属系统</strong>：品质系统（Quality Management System）<br>
+> <strong>所属菜单</strong>：新品测试 → 大货样<br>
+> <strong>技术栈</strong>：Element UI + Vue SPA<br>
+> <strong>分析时间</strong>：2026-05-14<br>
+> <strong>分析方法</strong>：Playwright 自动化遍历 + 截图采集<br>
+<br>
+<hr><br>
+<br>
+<h2>一、功能概述</h2><br>
+<br>
+<strong>大货样品</strong>是品质系统中新品测试模块的核心子模块，用于管理大货阶段的产品样品测试全流程。该页面承载了从样品录入、指派测试、测试执行、质量审核到最终合格确认的完整生命周期管理，是品质部门与研发/运营团队协同的关键枢纽。<br>
+<br>
+<strong>核心业务定位</strong>：<br>
+- 接收来自工程样/裸机样阶段的测试通过样品<br>
+- 指派专门的测试工程师执行大货阶段品质验证<br>
+- 支持特采、切换平台、批量合格等多种特殊场景处理<br>
+- 记录完整的测试操作日志和附件资料<br>
+<br>
+<strong>主要用户角色</strong>：品质工程师、品质经理、测试执行人员、产品开发人员<br>
+<br>
+<hr><br>
+<br>
+<h2>二、页面布局说明</h2><br>
+<br>
+``<code><br>
+┌─────────────────────────────────────────────────────────────────┐<br>
+│  [顶栏] 系统名称:品质系统  │  用户:系统管理员 ▼ │ [全屏]         │<br>
+├────────────┬────────────────────────────────────────────────────┤<br>
+│            │  [面包屑] 首页                                       │<br>
+│  [左侧菜单]│  ┌──────────────────────────────────────────────┐    │<br>
+│            │  │ 大货样品按钮栏（第一行）                       │    │<br>
+│  系统管理   │  │ 指派测试 │ 执行测试 │ 品质经理审核 │ 导出  │    │<br>
+│  用户管理   │  │ 转移测试 │ 一键复制 │ 修改资料  │批量修改资料│   │<br>
+│  供应商引入 │  │ 修改附件 │特采转合格 │大货样批量合格          │    │<br>
+│  新品测试 ← │  ├──────────────────────────────────────────────┤    │<br>
+│    大货样  │  │ 大货样品按钮栏（第二行）                       │    │<br>
+│  供应商品质  │  │ 批量修改型号                                  │    │<br>
+│  品质检验   │  ├──────────────────────────────────────────────┤    │<br>
+│  售后分析   │  │ 搜索筛选区                                    │    │<br>
+│  品质改进   │  │ [SKU输入] [名称输入] [型号输入] [批次号]       │    │<br>
+│  品质冻结   │  │ [名称] [品类] [数量范围] [日期范围]            │    │<br>
+│  海外品质   │  │ [认证机构]              [搜索] [清空] [▼]     │    │<br>
+│  文件管理   │  ├──────────────────────────────────────────────┤    │<br>
+│  合规认证   │  │ 数据列表表格（分页）                          │    │<br>
+│  VOC       │  │ ┌────┬────┬────┬────┬────┬────┬────┬────┐  │    │<br>
+│            │  │ │ SKU│操作│型号│批次│时间│人员│状态│操作│  │    │<br>
+│            │  │ ├────┼────┼────┼────┼────┼────┼────┼────┤  │    │<br>
+│            │  │ │... │... │... │... │... │... │... │详情│  │    │<br>
+│            │  │ └────┴────┴────┴────┴────┴────┴────┴────┘  │    │<br>
+│            │  │                  [◀] 第1页 [▶]  共N条         │    │<br>
+│            │  └──────────────────────────────────────────────┘    │<br>
+└────────────┴────────────────────────────────────────────────────┘<br>
+</code>`<code><br>
+<br>
+<hr><br>
+<br>
+<h2>三、操作按钮及功能</h2><br>
+<br>
+<h3>3.1 主操作按钮栏（第一行，y≈82px）</h3><br>
+<br>
+<tr><td>序号</td><td>按钮名称</td><td>样式类</td><td>功能描述</td><td>点击行为</td></tr><br>
+<tr><td>:---:</td><td>---------</td><td>-------</td><td>---------</td><td>---------</td></tr><br>
+<tr><td>1</td><td><strong>指派测试</strong></td><td></code>el-button--primary el-button--mini<code></td><td>将选中的样品指派给指定测试工程师执行测试</td><td>弹出指派对话框，需选择执行人</td></tr><br>
+<tr><td>2</td><td><strong>执行测试</strong></td><td></code>el-button--primary el-button--mini<code></td><td>对已指派的样品开始执行测试流程</td><td>跳转至测试执行页面或弹出测试表单</td></tr><br>
+<tr><td>3</td><td><strong>品质经理审核</strong></td><td></code>el-button--primary el-button--mini<code></td><td>品质经理对测试结果进行审批确认</td><td>弹出审核对话框，支持通过/驳回</td></tr><br>
+<tr><td>4</td><td><strong>导出</strong></td><td></code>el-button--primary el-button--mini<code></td><td>将当前列表数据导出为 Excel 文件</td><td>浏览器下载 Excel 文件</td></tr><br>
+<tr><td>5</td><td><strong>转移测试</strong></td><td></code>el-button--primary el-button--mini<code></td><td>将样品测试任务转移给其他工程师</td><td>弹出转移对话框</td></tr><br>
+<tr><td>6</td><td><strong>一键复制</strong></td><td></code>el-button--primary el-button--mini<code></td><td>快速复制选中样品的编号/SKU信息</td><td>写入剪贴板，提示复制成功</td></tr><br>
+<tr><td>7</td><td><strong>修改资料</strong></td><td></code>el-button--primary el-button--mini<code></td><td>修改单个选中样品的详细资料</td><td>弹出资料编辑表单</td></tr><br>
+<tr><td>8</td><td><strong>批量修改资料</strong></td><td></code>el-button--primary el-button--mini<code></td><td>批量修改多个选中样品的资料</td><td>弹出批量编辑表单</td></tr><br>
+<tr><td>9</td><td><strong>修改附件</strong></td><td></code>el-button--primary el-button--mini<code></td><td>上传/替换样品的附件文件（报告/图片等）</td><td>弹出文件上传对话框</td></tr><br>
+<tr><td>10</td><td><strong>特采转合格</strong></td><td></code>el-button--primary el-button--mini<code></td><td>将特采状态的样品转为合格状态</td><td>弹出确认对话框</td></tr><br>
+<tr><td>11</td><td><strong>大货样批量合格</strong></td><td></code>el-button--primary el-button--small<code></td><td>将多个样品批量标记为合格</td><td>批量操作，需确认</td></tr><br>
+<br>
+<h3>3.2 主操作按钮栏（第二行，y≈144px）</h3><br>
+<br>
+<tr><td>序号</td><td>按钮名称</td><td>样式类</td><td>功能描述</td></tr><br>
+<tr><td>:---:</td><td>---------</td><td>-------</td><td>---------</td></tr><br>
+<tr><td>12</td><td><strong>批量修改型号</strong></td><td></code>el-button--primary el-button--small<code></td><td>批量修改选中样品的型号信息</td></tr><br>
+<br>
+<h3>3.3 工具按钮</h3><br>
+<br>
+<tr><td>序号</td><td>按钮名称</td><td>样式类</td><td>功能描述</td></tr><br>
+<tr><td>:---:</td><td>---------</td><td>-------</td><td>---------</td></tr><br>
+<tr><td>13</td><td>展开筛选（▼）</td><td></code>el-button--default el-button--small is-circle<code></td><td>展开/收起高级筛选条件面板</td></tr><br>
+<br>
+<hr><br>
+<br>
+<h2>四、搜索筛选字段</h2><br>
+<br>
+> 位置：按钮栏下方，所有输入字段均有 </code>el-input__inner<code> 样式<br>
+<br>
+<h3>4.1 第一行筛选字段（y≈216-257px）</h3><br>
+<br>
+<tr><td>字段名称</td><td>输入类型</td><td>Placeholder 提示文本</td><td>说明</td></tr><br>
+<tr><td>---------</td><td>---------</td><td>---------------------</td><td>------</td></tr><br>
+<tr><td>SKU</td><td>单行文本输入</td><td></code>请输入SKU,多个英文逗号隔开<code></td><td>支持批量输入，多个用英文逗号分隔</td></tr><br>
+<tr><td>SKU名称</td><td>单行文本输入</td><td></code>请输入SKU名称,多个英文逗号隔开<code></td><td>支持批量输入</td></tr><br>
+<tr><td>型号</td><td>单行文本输入</td><td></code>请输入型号,多个英文逗号隔开<code></td><td>支持模糊匹配/批量查询</td></tr><br>
+<br>
+<h3>4.2 第二行筛选字段（y≈257-300px）</h3><br>
+<br>
+<tr><td>字段名称</td><td>输入类型</td><td>Placeholder 提示文本</td><td>说明</td></tr><br>
+<tr><td>---------</td><td>---------</td><td>---------------------</td><td>------</td></tr><br>
+<tr><td>名称</td><td>单行文本输入</td><td></code>请输入名称,多个英文逗号隔开<code></td><td>产品名称</td></tr><br>
+<tr><td>品类</td><td>下拉选择 + 输入</td><td></code>请选择<code></td><td>从预设品类列表中选择，支持搜索过滤</td></tr><br>
+<tr><td>认证机构</td><td>单行文本输入</td><td></code>请输入认证机构,多个英文逗号隔开<code></td><td>支持批量</td></tr><br>
+<br>
+<h3>4.3 第三行筛选字段（y≈300-387px）</h3><br>
+<br>
+<tr><td>字段名称</td><td>输入类型</td><td>Placeholder 提示文本</td><td>说明</td></tr><br>
+<tr><td>---------</td><td>---------</td><td>---------------------</td><td>------</td></tr><br>
+<tr><td>批次号</td><td>单行文本输入</td><td></code>请选择<code></td><td>可输入或选择批次号</td></tr><br>
+<tr><td>数量</td><td>整数输入</td><td></code>请输入正整数<code></td><td>数量范围筛选</td></tr><br>
+<br>
+<h3>4.4 第四行筛选字段（y≈381-420px）</h3><br>
+<br>
+<tr><td>字段名称</td><td>输入类型</td><td>Placeholder 提示文本</td><td>说明</td></tr><br>
+<tr><td>---------</td><td>---------</td><td>---------------------</td><td>------</td></tr><br>
+<tr><td>日期范围</td><td>日期范围选择器</td><td></code>开始日期<code> / </code>结束日期<code></td><td></code>el-range-input<code> 组件，选择创建时间范围</td></tr><br>
+<br>
+<h3>4.5 操作按钮</h3><br>
+<br>
+<tr><td>按钮名称</td><td>位置坐标</td><td>功能</td></tr><br>
+<tr><td>---------</td><td>---------</td><td>------</td></tr><br>
+<tr><td><strong>搜 索</strong></td><td>x≈1228, y≈216</td><td>执行筛选查询</td></tr><br>
+<tr><td><strong>清 空</strong></td><td>x≈1310, y≈216</td><td>重置所有筛选条件</td></tr><br>
+<br>
+<hr><br>
+<br>
+<h2>五、数据列表字段说明</h2><br>
+<br>
+> 基于遍历抓取到的表格数据（共16列），字段从表格 </code><td><code> 中提取：<br>
+<br>
+<tr><td>序号</td><td>字段名称</td><td>示例数据</td><td>字段描述</td></tr><br>
+<tr><td>:---:</td><td>---------</td><td>---------</td><td>---------</td></tr><br>
+<tr><td>1</td><td>SKU/编号</td><td></code>CAAN1003542<code>、</code>CAEN1003542<code></td><td>样品的唯一编码，CA前缀可能代表大货样类别</td></tr><br>
+<tr><td>2</td><td>操作类型</td><td></code>大货样切换平台<code>、</code>添加变参源SKU-黑<code></td><td>当前对样品执行的操作记录类型</td></tr><br>
+<tr><td>3</td><td>型号</td><td></code>FRAN1003501VN-FF<code>、</code>FREN1003501VN-EE<code></td><td>产品型号编码，含版本标识</td></tr><br>
+<tr><td>4</td><td>批次号</td><td></code>20260513<code>、</code>20260513型号<code></td><td>关联的生产批次编号</td></tr><br>
+<tr><td>5</td><td>创建时间</td><td></code>2026-05-13 19:05<code></td><td>记录创建时间</td></tr><br>
+<tr><td>6</td><td>用户/操作人</td><td></code>系统管理员<code>、</code>杨沛<code></td><td>执行该操作的人员</td></tr><br>
+<tr><td>7</td><td>状态标识</td><td></code>是(切换平台)<code>、</code>否<code></td><td>标识样品是否进行了特殊操作</td></tr><br>
+<tr><td>8</td><td>详情操作</td><td></code>[操作列]<code></td><td>每行的详情查看/编辑入口</td></tr><br>
+<br>
+<hr><br>
+<br>
+<h2>六、业务流程说明</h2><br>
+<br>
+<h3>6.1 完整生命周期流程</h3><br>
+<br>
+</code>`<code><br>
+录入样品 → 指派测试 → 执行测试 → 品质经理审核 → 合格确认<br>
+                    ↓<br>
+              [特采申请] → 特采转合格<br>
+                    ↓<br>
+              [切换平台] → 平台切换记录<br>
+</code>`<code><br>
+<br>
+<h3>6.2 核心业务流程</h3><br>
+<br>
+<strong>流程A：常规测试</strong><br>
+1. 在列表中选择样品（多选）<br>
+2. 点击「指派测试」→ 选择执行工程师 → 确认<br>
+3. 执行人员点击「执行测试」→ 填写测试结果 → 提交<br>
+4. 品质经理点击「品质经理审核」→ 审核通过/驳回<br>
+<br>
+<strong>流程B：特殊场景</strong><br>
+- <strong>特采转合格</strong>：样品因某些原因走特批通道，通过后转为合格<br>
+- <strong>切换平台</strong>：同一产品切换到不同销售平台（如 Amazon → 独立站）<br>
+- <strong>批量合格</strong>：研发确认后，批量标记样品为合格状态<br>
+- <strong>批量修改型号</strong>：统一修改多个样品的型号信息<br>
+<br>
+<h3>6.3 搜索查询流程</h3><br>
+1. 在筛选区填入任意条件（SKU/型号/名称/品类/批次等）<br>
+2. 点击「搜索」→ 列表刷新显示符合条件的数据<br>
+3. 点击「清空」→ 重置所有筛选条件<br>
+<br>
+<hr><br>
+<br>
+<h2>七、权限及状态说明</h2><br>
+<br>
+<h3>7.1 页面权限</h3><br>
+- 页面入口：</code>新品测试<code> → </code>大货样<code>，需具有相应菜单权限<br>
+- 按钮级权限：不同角色可见不同按钮（如「品质经理审核」仅品质经理可见）<br>
+<br>
+<h3>7.2 按钮启用规则（基于选中状态）</h3><br>
+<tr><td>按钮</td><td>启用条件</td></tr><br>
+<tr><td>-----</td><td>---------</td></tr><br>
+<tr><td>指派测试</td><td>选中≥1条未指派样品</td></tr><br>
+<tr><td>执行测试</td><td>选中≥1条已指派但未执行的样品</td></tr><br>
+<tr><td>品质经理审核</td><td>选中≥1条待审核样品</td></tr><br>
+<tr><td>批量修改资料/型号</td><td>选中≥2条样品</td></tr><br>
+<tr><td>大货样批量合格</td><td>选中≥1条待合格样品</td></tr><br>
+<br>
+<h3>7.3 样品状态流转</h3><br>
+<tr><td>状态</td><td>说明</td></tr><br>
+<tr><td>-----</td><td>------</td></tr><br>
+<tr><td>待指派</td><td>样品已录入，等待指派测试工程师</td></tr><br>
+<tr><td>待执行</td><td>已指派，等待测试执行</td></tr><br>
+<tr><td>测试中</td><td>测试执行中</td></tr><br>
+<tr><td>待审核</td><td>测试完成，等待品质经理审核</td></tr><br>
+<tr><td>合格</td><td>通过品质审核</td></tr><br>
+<tr><td>特采</td><td>走特批通道</td></tr><br>
+<tr><td>冻结</td><td>因品质问题被冻结</td></tr><br>
+<br>
+<hr><br>
+<br>
+<h2>八、已知问题 / 优化建议</h2><br>
+<br>
+<tr><td>序号</td><td>问题描述</td><td>优化建议</td><td>优先级</td></tr><br>
+<tr><td>:---:</td><td>---------</td><td>---------</td><td>:-----:</td></tr><br>
+<tr><td>1</td><td>页面标题显示「首页——品质系统」，未体现当前模块名称</td><td>建议在路由切换后动态更新 </code><title><code> 标签为「大货样——品质系统」</td><td>中</td></tr><br>
+<tr><td>2</td><td>表格列宽不可调整，且部分长字段（如型号 </code>FRAN1003501VN-FF<code>）显示被截断</td><td>建议增加列宽可拖拽功能，或在鼠标悬停时显示完整内容 tooltip</td><td>低</td></tr><br>
+<tr><td>3</td><td>搜索「搜 索」按钮文本中间有空格，与其他按钮风格不一致</td><td>建议统一按钮文本格式</td><td>低</td></tr><br>
+<tr><td>4</td><td>筛选区品类下拉选择器在输入过滤时可能存在性能问题（列表较长时）</td><td>建议增加远程搜索（remote filter）优化</td><td>中</td></tr><br>
+<tr><td>5</td><td>批量操作（批量合格/批量修改资料）缺少操作确认二次弹窗</td><td>建议对所有批量操作增加「确认选中了 N 条」的安全提示</td><td>高</td></tr><br>
+<tr><td>6</td><td>导出功能仅支持当前页导出，不支持全量导出</td><td>建议增加「导出全部」选项并配合后台异步任务</td><td>中</td></tr><br>
+<tr><td>7</td><td>日期范围选择器使用双输入框（开始/结束分离），操作成本高</td><td>建议改为 Element UI 的 </code><el-date-picker type="daterange"><code> 一体化选择器</td><td>中</td></tr><br>
+<tr><td>8</td><td>分页组件显示「共N条」时未提供每页条数切换下拉</td><td>建议增加 </code>el-pagination<code> 的 </code>page-sizes<code> 属性允许自定义每页条数</td><td>低</td></tr><br>
+<br>
+<hr><br>
+<br>
+<h2>九、技术备注</h2><br>
+<br>
+<h3>9.1 框架与组件</h3><br>
+- <strong>前端框架</strong>：Vue 2.x<br>
+- <strong>UI 组件库</strong>：Element UI 2.15.x<br>
+- <strong>路由</strong>：Vue Router（Hash 模式，</code>#/newProductTest/biggoodsSample<code>）<br>
+- <strong>HTTP</strong>：Axios<br>
+- <strong>页面类型</strong>：SPA（单页应用）<br>
+<br>
+<h3>9.2 关键 CSS 类参考</h3><br>
+<tr><td>组件</td><td>CSS 类名</td></tr><br>
+<tr><td>-----</td><td>---------</td></tr><br>
+<tr><td>按钮</td><td></code>.el-button<code></td></tr><br>
+<tr><td>主按钮</td><td></code>.el-button--primary<code></td></tr><br>
+<tr><td>输入框</td><td></code>.el-input__inner<code></td></tr><br>
+<tr><td>下拉选择</td><td></code>.el-select__input<code></td></tr><br>
+<tr><td>日期范围</td><td></code>.el-range-input<code></td></tr><br>
+<tr><td>表格</td><td></code>.el-table<code></td></tr><br>
+<tr><td>弹窗</td><td></code>.el-dialog<code></td></tr><br>
+<tr><td>分页</td><td></code>.el-pagination<code></td></tr><br>
+<br>
+<h3>9.3 截图资源</h3><br>
+<tr><td>截图文件</td><td>说明</td></tr><br>
+<tr><td>---------</td><td>------</td></tr><br>
+<tr><td></code>01_overview_fullpage.png<code></td><td>全页概览截图</td></tr><br>
+<tr><td></code>02_main_fullpage.png<code></td><td>多滚动收集后全页截图</td></tr><br>
+<tr><td></code>screenshots/act_*.png<code></td><td>各按钮点击前截图</td></tr><br>
+<tr><td></code>screenshots/modal_*.png`</td><td>弹窗截图</td></tr><br>
+<br>
+<hr><br>
+<br>
+<em>文档由「历史功能解析」Skill 自动生成</em><br>
+<em>分析时间：2026-05-14 | 分析工具：Playwright Chromium</em><br>
+
+<p style="text-align:center; color:#999; margin-top:60px; font-size:0.85em;">
+    文档由「历史功能解析」Skill 自动生成 | 品质系统 · 大货样品模块 | 2026-05-14
+</p>
+</body>
+</html>
